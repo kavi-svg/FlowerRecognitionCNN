@@ -126,7 +126,7 @@ def save_prediction_image(image, label, score, output_dir, index):
 
 
 def save_html_report(entries, report_path):
-    \"\"\"Save prediction results to a professional HTML report.\"\\"
+    """Save prediction results to a professional HTML report."""
     report_path = pathlib.Path(report_path)
     report_path.parent.mkdir(parents=True, exist_ok=True)
 
