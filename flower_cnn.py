@@ -59,7 +59,6 @@ def sanitize_filename(name):
 
 def download_image(url):
     """Load image from local file path or remote URL (HTTP/HTTPS/file://)."""
-    # Try as local file path first
     p = pathlib.Path(url)
     if p.is_file():
         try:
@@ -68,7 +67,6 @@ def download_image(url):
             print(f"    [local file] Error opening {p}: {e}")
             raise
 
-    # Try as file:// URL
     if url.startswith("file://"):
         local = url[7:]
         p = pathlib.Path(local)
@@ -79,7 +77,6 @@ def download_image(url):
                 print(f"    [file:// URL] Error opening {p}: {e}")
                 raise
 
-    # Try as remote HTTP(S) URL
     try:
         req = urllib.request.Request(
             url,
@@ -108,12 +105,11 @@ def save_prediction_image(image, label, score, output_dir, index):
     draw = ImageDraw.Draw(image)
     font = ImageFont.load_default()
     text = f"{label} ({score:.1%})"
-    
-    # Get text bounding box
+
     bbox = draw.textbbox((0, 0), text, font=font)
     text_width = bbox[2] - bbox[0]
     text_height = bbox[3] - bbox[1]
-    
+
     padding = 8
     rect = [0, 0, text_width + padding * 2, text_height + padding * 2]
     draw.rectangle(rect, fill=(0, 0, 0, 200))
@@ -235,7 +231,7 @@ def predict_urls(model, class_names, urls, image_size=(180, 180), output_dir="pr
             print(f"  [1] Loading image...")
             original_image = download_image(url)
             print(f"  [2] Image loaded: {original_image.size}")
-            
+
             print(f"  [3] Preprocessing...")
             image = preprocess_image(original_image, image_size=image_size)
             print(f"  [4] Running model prediction...")
@@ -245,7 +241,7 @@ def predict_urls(model, class_names, urls, image_size=(180, 180), output_dir="pr
             label = class_names[predicted_idx]
             score = float(np.max(prediction))
             print(f"  [5] Prediction: {label} ({score:.1%})")
-            
+
             print(f"  [6] Saving annotated image...")
             saved_path = save_prediction_image(original_image, label, score, output_dir, index)
             entries.append((saved_path, url, label, score))
@@ -309,19 +305,17 @@ def main():
             raise FileNotFoundError(f"Saved model not found: {model_path}")
 
         class_names = get_class_names(args.data_dir)
-        
-        # Override with custom flower names if provided
+
         if args.flower_names:
             custom_names = [name.strip() for name in args.flower_names.split(",")]
             if len(custom_names) != len(class_names):
                 print(f"WARNING: Found {len(class_names)} classes but provided {len(custom_names)} flower names.")
                 print(f"Classes: {class_names}")
                 print(f"Provided names: {custom_names}")
-                # Use what we have, pad or truncate as needed
                 class_names = custom_names[:len(class_names)] + class_names[len(custom_names):]
             else:
                 class_names = custom_names
-        
+
         model = keras.models.load_model(model_path)
         predict_urls(
             model,
